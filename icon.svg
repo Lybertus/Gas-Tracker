@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Apple Dark Glass Canvas Gradient -->
+    <linearGradient id="appleBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a1e" />
+      <stop offset="50%" stop-color="#121215" />
+      <stop offset="100%" stop-color="#08080a" />
+    </linearGradient>
+
+    <!-- Apple Ambient Fire Glow -->
+    <radialGradient id="appleAmbientGlow" cx="50%" cy="58%" r="44%">
+      <stop offset="0%" stop-color="#ff9500" stop-opacity="0.28" />
+      <stop offset="40%" stop-color="#ff3b30" stop-opacity="0.14" />
+      <stop offset="70%" stop-color="#ff2d55" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Apple Signature Fire Gradient -->
+    <linearGradient id="appleFlame" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffe600" />
+      <stop offset="16%" stop-color="#ffb400" />
+      <stop offset="42%" stop-color="#ff6e00" />
+      <stop offset="72%" stop-color="#ff3b30" />
+      <stop offset="100%" stop-color="#d7142d" />
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow -->
+    <filter id="appleShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.55" />
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#ff3b30" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Apple Continuous Squircle Background -->
+  <rect width="512" height="512" rx="115" fill="url(#appleBg)" />
+
+  <!-- Subtle Specular Rim Light along top edge -->
+  <rect x="1" y="1" width="510" height="510" rx="114" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1.5" />
+
+  <!-- Ambient Light Emission Behind Flame -->
+  <circle cx="256" cy="296" r="225" fill="url(#appleAmbientGlow)" />
+
+  <!-- Flame Shape with Inner Cutout (Fill-Rule: evenodd creates the Apple stencil aperture) -->
+  <path d="M 268,92
+           C 288,120 322,175 348,235
+           C 368,285 372,335 364,370
+           C 352,412 312,436 256,436
+           C 200,436 160,412 148,370
+           C 140,335 144,285 164,235
+           C 180,195 198,165 212,146
+           C 218,138 228,146 236,168
+           C 244,192 250,206 256,206
+           C 262,206 268,192 272,165
+           C 276,140 272,112 268,92 Z
+           M 256,270
+           C 266,290 284,320 284,348
+           C 284,376 272,396 256,396
+           C 240,396 228,376 228,348
+           C 228,320 246,290 256,270 Z"
+        fill="url(#appleFlame)"
+        fill-rule="evenodd"
+        filter="url(#appleShadow)" />
+</svg>

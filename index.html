@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Heizkosten Tracker</title>
+  
+  <!-- Apple Web App & iOS Meta Tags (optimiert für iPhone 15 Pro Max) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Heizkosten">
+  <meta name="theme-color" content="#09090b">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+  
+  <!-- Web Manifest für PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="brand">
+          <div class="flame-icon-container">
+            <svg class="flame-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+            </svg>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <h1 class="app-title">Heizkosten</h1>
+              <span id="header-saved-indicator" class="saved-indicator" title="Automatisch gesichert">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Gesichert</span>
+              </span>
+            </div>
+            <span class="app-subtitle" id="header-date">Lade...</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="btn-quick-print" class="btn-icon-subtle" title="PDF / Drucken" aria-label="PDF drucken">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+          </button>
+          <button id="btn-quick-add" class="btn-icon-primary" title="Zählerstand erfassen" aria-label="Zählerstand erfassen">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Views -->
+    <main class="main-content">
+      
+      <!-- TAB 1: ÜBERSICHT (DASHBOARD) -->
+      <section id="view-dashboard" class="tab-view active">
+        <!-- Minimal Mode Header Pill (nur bei Minimal-Design aktiv) -->
+        <div class="minimal-mode-banner" id="minimal-mode-banner">
+          <div class="minimal-banner-pill">
+            <span class="minimal-banner-dot"></span>
+            <span>Minimalistischer Modus • Wichtigste Werte</span>
+          </div>
+        </div>
+
+        <div class="dash-desktop-grid">
+          <div class="dash-col-left">
+            <!-- Live-Wetter & Frosterkennung Wennigsen (30974) -->
+            <div class="dash-weather-strip" id="dash-weather-strip">
+          <div class="weather-strip-left">
+            <span class="weather-icon" id="dash-weather-icon">🌤️</span>
+            <div>
+              <div class="weather-temp-main" id="dash-weather-temp">30974 Wennigsen: Lade Wetter...</div>
+              <div class="weather-sub-info" id="dash-weather-sub">DWD Station Barsinghausen / Hannover</div>
+            </div>
+          </div>
+          <div class="weather-strip-right" id="dash-frost-indicator">
+            <span class="badge badge-outline" id="dash-frost-badge">Klima-Sync</span>
+          </div>
+        </div>
+
+        <!-- Hero Card: Aktueller Zählerstand -->
+        <div class="card hero-card">
+          <div class="hero-top">
+            <span class="hero-label">Aktueller Zählerstand</span>
+            <span class="badge badge-accent" id="dash-active-price">-- ct/kWh</span>
+          </div>
+          <div class="hero-value-wrap">
+            <span class="hero-value" id="dash-current-kwh">0,0</span>
+            <span class="hero-unit">kWh</span>
+          </div>
+          <div class="hero-meta" id="dash-last-date">Noch keine Ablesung erfasst</div>
+        </div>
+
+        <!-- Quick Primary Action -->
+        <button class="btn btn-primary btn-large btn-glow" id="btn-open-add-reading">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Zählerstand erfassen
+        </button>
+
+        <!-- KPI Grid -->
+        <div class="stats-grid">
+          <!-- Letzter Zeitraum Verbrauch -->
+          <div class="card stat-card">
+            <div class="stat-icon-wrap icon-amber">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Letzter Verbrauch</div>
+              <div class="stat-value" id="dash-last-delta">-- kWh</div>
+              <div class="stat-sub" id="dash-last-duration">-- Tage</div>
+            </div>
+          </div>
+
+          <!-- Letzte Kosten -->
+          <div class="card stat-card">
+            <div class="stat-icon-wrap icon-emerald">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Kosten Zeitraum</div>
+              <div class="stat-value text-emerald" id="dash-last-cost">-- €</div>
+              <div class="stat-sub" id="dash-last-cost-daily">-- €/Tag</div>
+            </div>
+          </div>
+
+          <!-- Laufender Monat -->
+          <div class="card stat-card">
+            <div class="stat-icon-wrap icon-sky">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Diesen Monat</div>
+              <div class="stat-value" id="dash-month-kwh">-- kWh</div>
+              <div class="stat-sub text-emerald" id="dash-month-cost">-- €</div>
+            </div>
+          </div>
+
+          <!-- Laufendes Jahr -->
+          <div class="card stat-card">
+            <div class="stat-icon-wrap icon-purple">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Dieses Jahr</div>
+              <div class="stat-value" id="dash-year-kwh">-- kWh</div>
+              <div class="stat-sub text-emerald" id="dash-year-cost">-- €</div>
+            </div>
+          </div>
+        </div>
+
+          </div>
+
+          <div class="dash-col-right">
+            <!-- Heiz- & Nachzahlungs-Prognose Card (Standort 30974 Wennigsen) -->
+        <div class="card forecast-highlight-card" id="dash-forecast-card">
+          <!-- Season Toggle: Aktuell vs Folgejahr -->
+          <div class="dash-season-toggle" id="dash-season-toggle">
+            <button type="button" class="dash-season-btn active" data-season-offset="0" id="btn-dash-season-current">Heizperiode 2026/27</button>
+            <button type="button" class="dash-season-btn" data-season-offset="1" id="btn-dash-season-next">Folgejahr 2027/28 ▶</button>
+          </div>
+
+          <div class="forecast-top-row">
+            <div class="flex-align-center gap-6">
+              <span class="forecast-badge-loc">📍 30974 Wennigsen</span>
+              <span class="text-xs text-muted" id="dash-forecast-season-lbl">Jahresübergreifend</span>
+            </div>
+            <span class="badge badge-accent" id="dash-forecast-status-badge">Heiz-Prognose</span>
+          </div>
+
+          <!-- Baseline Strip (Startwert nach Sommer) -->
+          <div class="dash-baseline-strip" id="dash-baseline-strip">
+            <span class="dash-baseline-pill">🔥 Startwert:</span>
+            <span id="dash-baseline-text">Wird ermittelt...</span>
+          </div>
+
+          <div class="forecast-main-row">
+            <div>
+              <span class="forecast-sublabel">Erwartetes Abrechnungsergebnis</span>
+              <div class="forecast-main-val" id="dash-forecast-balance">Berechne...</div>
+            </div>
+            <div class="forecast-right-stat">
+              <span class="forecast-sublabel">Erwartete Gesamtkosten</span>
+              <div class="forecast-sub-val" id="dash-forecast-annual-cost">-- €</div>
+            </div>
+          </div>
+
+          <!-- Progress Bar: Abschläge vs Kosten -->
+          <div class="forecast-bar-wrap">
+            <div class="forecast-bar-labels">
+              <span>Geplante Abschläge: <strong id="dash-forecast-paid">-- €</strong></span>
+              <span>Prognose: <strong id="dash-forecast-expected">-- €</strong></span>
+            </div>
+            <div class="forecast-progress-track">
+              <div class="forecast-progress-fill" id="dash-forecast-progress" style="width: 50%;"></div>
+            </div>
+          </div>
+
+          <div class="forecast-advice-text" id="dash-forecast-advice">
+            Basierend auf bisherigen Einträgen und DWD-Gradtagszahlen für Wennigsen.
+          </div>
+
+          <button class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 10px;" id="btn-dash-to-forecast">
+            Detaillierte Heizmonate-Aufschlüsselung ansehen &rarr;
+          </button>
+        </div>
+
+        <!-- Recent Entries Preview -->
+        <div class="section-header">
+          <h2 class="section-title">Letzte Ablesungen</h2>
+          <button class="btn-link" id="link-view-all-history">Alle anzeigen</button>
+        </div>
+        <div class="history-list" id="dash-recent-list">
+          <!-- Dynamically populated -->
+        </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: VERLAUF (CHRONIK) -->
+      <section id="view-history" class="tab-view">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Alle Zählerstände</h2>
+            <div class="text-muted text-sm" id="history-summary-count">0 Einträge</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-add-from-history">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Neu
+          </button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+          <select id="history-year-filter" class="form-select filter-select">
+            <option value="all">Alle Jahre</option>
+          </select>
+          <div class="filter-totals" id="history-filter-totals">
+            Gesamt: <strong id="filter-total-kwh">0 kWh</strong> • <strong class="text-emerald" id="filter-total-cost">0,00 €</strong>
+          </div>
+        </div>
+
+        <!-- Tag filter bar (Punkt 5 & 4) -->
+        <div class="history-tag-filter-bar" id="history-tag-filter-bar">
+          <button type="button" class="tag-filter-chip active" data-filter-tag="all">Alle</button>
+          <button type="button" class="tag-filter-chip" data-filter-tag="has-photo">📸 Mit Foto</button>
+          <button type="button" class="tag-filter-chip" data-filter-tag="Heizbeginn">🔥 Heizbeginn</button>
+          <button type="button" class="tag-filter-chip" data-filter-tag="Kamin">🪵 Kamin</button>
+          <button type="button" class="tag-filter-chip" data-filter-tag="Urlaub">✈️ Urlaub</button>
+          <button type="button" class="tag-filter-chip" data-filter-tag="Frost">❄️ Frost</button>
+          <button type="button" class="tag-filter-chip" data-filter-tag="Sparmodus">🌱 Sparmodus</button>
+        </div>
+
+        <div class="history-list full-list" id="full-history-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- TAB 3: STATISTIK & ANALYSE -->
+      <section id="view-stats" class="tab-view">
+        <div class="section-header">
+          <h2 class="section-title">Verbrauchs-Analyse</h2>
+          <button class="btn btn-secondary btn-sm" id="btn-print-stats">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            PDF / Drucken
+          </button>
+        </div>
+
+        <!-- Haupt-Navigation für Statistik -->
+        <div class="segmented-control main-stats-toggle stats-nav-scrollable">
+          <button class="segment-btn active" data-stats-subview="chart">Diagramm</button>
+          <button class="segment-btn" data-stats-subview="table">📅 Tagestabelle</button>
+          <button class="segment-btn" data-stats-subview="months">Monate</button>
+          <button class="segment-btn" data-stats-subview="years">Jahre</button>
+          <button class="segment-btn" data-stats-subview="forecast">Heiz-Prognose</button>
+          <button class="segment-btn" data-stats-subview="heatmap">Heatmap</button>
+          <button class="segment-btn" data-stats-subview="curve">Heizkurve</button>
+          <button class="segment-btn" data-stats-subview="records">Rekorde</button>
+        </div>
+
+        <!-- SUBVIEW 1: DIAGRAMM -->
+        <div id="subview-chart" class="stats-subview active">
+          <!-- Chart Mode Toggle & Vorjahres-Vergleich -->
+          <div class="chart-controls-bar">
+            <div class="segmented-control" style="flex: 1;">
+              <button class="segment-btn active" data-chart-mode="kwh">Verbrauch (kWh)</button>
+              <button class="segment-btn" data-chart-mode="cost">Kosten (€)</button>
+            </div>
+            <label class="chart-overlay-label" id="label-toggle-prev-year">
+              <input type="checkbox" id="chart-toggle-prev-year">
+              <span class="chart-overlay-pill">📉 Vorjahres-Kurve</span>
+            </label>
+          </div>
+
+          <!-- Canvas Chart Card -->
+          <div class="card chart-card">
+            <div class="chart-header">
+              <span class="chart-title" id="chart-main-title">Monatlicher Verbrauch</span>
+              <span class="text-muted text-xs" id="chart-sub-label">Tippe auf Balken für Details</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="stats-canvas"></canvas>
+              <div id="chart-tooltip" class="chart-tooltip"></div>
+            </div>
+          </div>
+
+          <!-- Key Metrics Cards -->
+          <div class="stats-summary-cards">
+            <div class="card summary-box">
+              <div class="summary-label">Erfasster Gesamtverbrauch</div>
+              <div class="summary-val" id="stat-total-kwh">0 kWh</div>
+              <div class="summary-sub" id="stat-first-reading-date">seit Start</div>
+            </div>
+            <div class="card summary-box">
+              <div class="summary-label">Erfasste Gesamtkosten</div>
+              <div class="summary-val text-emerald" id="stat-total-cost">0,00 €</div>
+              <div class="summary-sub">nur Arbeitskosten (ohne Grundpreis)</div>
+            </div>
+            <div class="card summary-box">
+              <div class="summary-label">Hochrechnung 365 Tage</div>
+              <div class="summary-val text-amber" id="stat-year-projection-kwh">0 kWh</div>
+              <div class="summary-sub" id="stat-year-projection-cost">ca. 0,00 € / Jahr</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW: TAGESTABELLE (Jahre -> Monate -> Tage mit kWh & Kosten) -->
+        <div id="subview-table" class="stats-subview">
+          <div class="card subview-info-card">
+            <div class="card-header-row" style="margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h3 class="subview-info-title">📅 Detaillierte Tages- & Monatstabelle</h3>
+                <div class="subview-info-desc" style="margin-top: 4px;">
+                  Exakter Gasverbrauch (kWh) und Kosten (€) für jeden einzelnen Tag. Je öfter Zählerstände erfasst werden, desto präziser ist jeder Tag errechnet.
+                </div>
+              </div>
+              <div class="daily-table-actions" style="display: flex; gap: 6px; align-items: center;">
+                <button type="button" class="btn btn-secondary btn-xs" id="btn-table-current-month" title="Aktuellen Monat öffnen">
+                  📍 Aktueller Monat
+                </button>
+                <button type="button" class="btn btn-secondary btn-xs" id="btn-table-toggle-all" title="Alle Jahre und Monate auf- oder zuklappen">
+                  Alle aufklappen
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hierarchical Accordion Container: Jahre -> Monate -> Tagestabelle -->
+          <div class="daily-table-hierarchy" id="daily-table-hierarchy">
+            <!-- Dynamisch generiert -->
+          </div>
+        </div>
+
+        <!-- SUBVIEW 2: MONATSÜBERSICHT (Kosten & kWh pro Monat) -->
+        <div id="subview-months" class="stats-subview">
+          <div class="card subview-info-card">
+            <div class="subview-info-title">📅 Aufschlüsselung pro Monat</div>
+            <div class="subview-info-desc">Übersicht aller Verbräuche und Kosten, aufgeteilt nach Kalendermonaten.</div>
+          </div>
+          <div class="breakdown-list" id="stats-months-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- SUBVIEW 3: JAHRESÜBERSICHT (Kosten & kWh pro Jahr) -->
+        <div id="subview-years" class="stats-subview">
+          <div class="card subview-info-card">
+            <div class="subview-info-title">📆 Aufschlüsselung pro Jahr</div>
+            <div class="subview-info-desc">Jahresbilanz mit Gesamtkosten, Durchschnitt pro Monat und Hochrechnung.</div>
+          </div>
+          <div class="breakdown-list" id="stats-years-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- SUBVIEW 4: HEIZ- & NACHZAHLUNGSPROGNOSE (30974 Wennigsen) -->
+        <div id="subview-forecast" class="stats-subview">
+          <!-- Location & Climate Model Header -->
+          <div class="card forecast-climate-card">
+            <div class="flex-row-between">
+              <div>
+                <span class="forecast-badge-loc">📍 30974 Wennigsen (Deister)</span>
+                <h3 class="forecast-section-title" style="margin-top: 6px;">Heizprognose & Jahresendabrechnung</h3>
+                <p class="text-xs text-muted" style="margin-top: 2px;">
+                  Berechnet aus DWD-Gradtagszahlen, BDEW-Heizprofil HE01 und deinen realen Zählerständen.
+                </p>
+              </div>
+            </div>
+
+            <!-- Parameters input row -->
+            <div class="forecast-inputs-grid" style="margin-top: 14px;">
+              <div>
+                <label for="forecast-input-installment" class="form-label text-xs">Monatlicher Abschlag (€)</label>
+                <div class="input-with-addon">
+                  <input type="number" id="forecast-input-installment" class="form-input form-input-sm" step="1" min="0" placeholder="z.B. 120">
+                  <span class="input-addon">€/Monat</span>
+                </div>
+              </div>
+              <div>
+                <label for="forecast-input-start-month" class="form-label text-xs">Abrechnungsjahr Beginn</label>
+                <select id="forecast-input-start-month" class="form-select form-input-sm">
+                  <option value="9">September (Heizbeginn nach Sommer)</option>
+                  <option value="10">Oktober (Klassische Heizperiode)</option>
+                  <option value="1">Januar (Kalenderjahr)</option>
+                  <option value="4">April (Frühjahr)</option>
+                  <option value="7">Juli (Sommer)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Season Navigator (Jahresübergreifende Heizperiode & Folgejahr) -->
+          <div class="season-selector-bar" id="season-selector-bar">
+            <button type="button" class="btn-season-nav" id="btn-forecast-prev-season" title="Vorherige Heizperiode" aria-label="Vorherige Heizperiode">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <div class="season-select-wrap">
+              <select id="select-forecast-season" class="season-select" aria-label="Heizperiode wählen">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+            <button type="button" class="btn-season-nav" id="btn-forecast-next-season" title="Folgejahr-Prognose" aria-label="Folgejahr-Prognose">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
+
+          <!-- Startwert nach dem Sommer (Heizbeginn-Card) -->
+          <div class="card heating-baseline-card" id="heating-baseline-card">
+            <div class="flex-row-between">
+              <div class="flex-align-center gap-6">
+                <span class="badge badge-accent">🔥 Startwert nach dem Sommer</span>
+                <span class="text-xs text-muted" id="baseline-status-label">Lade...</span>
+              </div>
+            </div>
+            <div class="baseline-kpi-row" id="baseline-kpi-row">
+              <div class="baseline-kpi">
+                <span class="baseline-lbl">Start-Zählerstand</span>
+                <span class="baseline-val" id="baseline-val-kwh">-- kWh</span>
+              </div>
+              <div class="baseline-kpi">
+                <span class="baseline-lbl">Seit Heizbeginn</span>
+                <span class="baseline-val text-amber" id="baseline-val-delta">-- kWh</span>
+              </div>
+              <div class="baseline-kpi">
+                <span class="baseline-lbl">Heiztage</span>
+                <span class="baseline-val" id="baseline-val-days">-- Tage</span>
+              </div>
+              <div class="baseline-kpi">
+                <span class="baseline-lbl">Ø Heizkosten / Tag</span>
+                <span class="baseline-val text-emerald" id="baseline-val-daily">-- €/d</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Highlight Prognose KPI Box -->
+          <div class="card forecast-result-box" id="forecast-result-box">
+            <div class="forecast-result-header">
+              <span class="forecast-result-tag">ERWARTETES ABRECHNUNGSERGEBNIS</span>
+              <span class="badge" id="forecast-result-badge">Berechnung aktiv</span>
+            </div>
+            
+            <div class="forecast-big-balance" id="forecast-big-balance">-- €</div>
+            <div class="forecast-balance-sub" id="forecast-balance-sub">Lade Prognosedaten...</div>
+
+            <div class="forecast-kpi-subgrid">
+              <div class="forecast-kpi-cell">
+                <span class="kpi-cell-lbl">Prognose Jahreskosten</span>
+                <span class="kpi-cell-val" id="forecast-kpi-cost">-- €</span>
+                <span class="kpi-cell-sub" id="forecast-kpi-kwh">-- kWh</span>
+              </div>
+              <div class="forecast-kpi-cell">
+                <span class="kpi-cell-lbl">Gezahlte Abschläge</span>
+                <span class="kpi-cell-val" id="forecast-kpi-paid">-- €</span>
+                <span class="kpi-cell-sub">12 Monate à Abschlag</span>
+              </div>
+              <div class="forecast-kpi-cell">
+                <span class="kpi-cell-lbl">Empfohlener Abschlag</span>
+                <span class="kpi-cell-val text-amber" id="forecast-kpi-rec-installment">-- € / Mo</span>
+                <span class="kpi-cell-sub">für Punktlandung auf 0 €</span>
+              </div>
+              <div class="forecast-kpi-cell">
+                <span class="kpi-cell-lbl">Datenbasis</span>
+                <span class="kpi-cell-val" id="forecast-kpi-actual-count">0 Monate Ist</span>
+                <span class="kpi-cell-sub" id="forecast-kpi-pred-count">12 Monate Prog</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12-Monate Detaillierte Tabelle -->
+          <div class="card settings-section" style="padding: 14px;">
+            <div class="section-header" style="margin-top: 0; margin-bottom: 8px;">
+              <h4 class="card-subtitle">📅 Monat für Monat (Heizkurve Wennigsen)</h4>
+            </div>
+            <p class="card-desc" style="margin-bottom: 12px;">
+              Hier siehst du, wie sich die Heizkosten über die kalten Wintermonate und den Warmwasser-Sommer verteilen.
+            </p>
+            <div class="forecast-months-container" id="forecast-months-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Live-Wetter & Witterungsbereinigung (Punkt 12, 14, 15) -->
+          <div class="card weather-analysis-card" id="forecast-weather-card">
+            <div class="card-header-row">
+              <div class="flex-align-center gap-8">
+                <span class="weather-big-icon" id="forecast-weather-icon">🌤️</span>
+                <div>
+                  <h4 class="card-subtitle" id="forecast-weather-title">Wetter & Gradtagszahlen (30974 Wennigsen)</h4>
+                  <div class="text-xs text-muted" id="forecast-weather-station">DWD-Station Barsinghausen / Hannover-Flughafen</div>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-xs" id="btn-refresh-weather" title="Wetterdaten aktualisieren">Aktualisieren</button>
+            </div>
+            <div class="weather-metrics-grid" style="margin-top: 12px;">
+              <div class="weather-metric-cell">
+                <span class="text-xs text-muted">Aktuelle Temperatur</span>
+                <span class="weather-metric-val" id="weather-val-current">-- °C</span>
+                <span class="text-xs text-secondary" id="weather-val-range">Min: -- / Max: --</span>
+              </div>
+              <div class="weather-metric-cell">
+                <span class="text-xs text-muted">Heizgradtage (HGT)</span>
+                <span class="weather-metric-val" id="weather-val-hgt">--</span>
+                <span class="text-xs text-secondary">Norm: 3.250 Kd</span>
+              </div>
+              <div class="weather-metric-cell highlight">
+                <span class="text-xs text-muted">Witterungsbereinigt</span>
+                <span class="weather-metric-val text-amber" id="weather-val-adjusted">-- kWh</span>
+                <span class="text-xs text-muted">VDI 3807 Klimanorm</span>
+              </div>
+              <div class="weather-metric-cell">
+                <span class="text-xs text-muted">Frost & Kältewelle</span>
+                <span class="weather-metric-val" id="weather-val-frost">0 Tage</span>
+                <span class="text-xs text-muted" id="weather-val-frost-sub">Frostfrei</span>
+              </div>
+            </div>
+            <div class="weather-advice-note" id="weather-advice-note">
+              💡 Die Witterungsbereinigung normiert das Wennigsen-Deister-Klima und zeigt dein echtes Heizverhalten unabhängig von milden oder kalten Wintern.
+            </div>
+          </div>
+
+          <!-- Was-wäre-wenn Simulator (Punkt 19) -->
+          <div class="card simulation-card" id="card-simulation">
+            <div class="card-header-row">
+              <div>
+                <h4 class="card-subtitle">🎛️ Was-wäre-wenn Simulator</h4>
+                <p class="card-desc">Simuliere Preissprünge oder einen extrem kalten Winter und sieh live die Auswirkung auf deine Nachzahlung.</p>
+              </div>
+              <button type="button" class="btn btn-secondary btn-xs" id="btn-reset-simulation">Zurücksetzen</button>
+            </div>
+
+            <div class="sim-slider-group">
+              <div class="sim-slider-header">
+                <span>Gaspreis-Veränderung:</span>
+                <span class="sim-slider-val" id="sim-price-val">0 % (Originalpreis)</span>
+              </div>
+              <input type="range" id="sim-slider-price" min="-25" max="50" step="5" value="0" class="sim-slider">
+              <div class="sim-slider-ticks">
+                <span>-25%</span>
+                <span>0%</span>
+                <span>+25%</span>
+                <span>+50%</span>
+              </div>
+            </div>
+
+            <div class="sim-slider-group">
+              <div class="sim-slider-header">
+                <span>Winter-Härte (Außentemperatur):</span>
+                <span class="sim-slider-val" id="sim-temp-val">Normaler Winter (0 °C Abweichung)</span>
+              </div>
+              <input type="range" id="sim-slider-temp" min="-3" max="3" step="0.5" value="0" class="sim-slider">
+              <div class="sim-slider-ticks">
+                <span>-3°C (Kälter)</span>
+                <span>Normal</span>
+                <span>+3°C (Milder)</span>
+              </div>
+            </div>
+
+            <div class="sim-slider-group">
+              <div class="sim-slider-header">
+                <span>Monatlicher Abschlag:</span>
+                <span class="sim-slider-val text-amber" id="sim-installment-val">120 € / Monat</span>
+              </div>
+              <input type="range" id="sim-slider-installment" min="40" max="300" step="5" value="120" class="sim-slider">
+            </div>
+
+            <!-- Simulation Live Result Box -->
+            <div class="sim-result-box" id="sim-result-box">
+              <div class="sim-result-item">
+                <span class="sim-result-lbl">Simulierte Jahreskosten:</span>
+                <span class="sim-result-val" id="sim-res-cost">-- €</span>
+              </div>
+              <div class="sim-result-item">
+                <span class="sim-result-lbl">Erwartetes Saldo:</span>
+                <span class="sim-result-val font-bold" id="sim-res-balance">-- €</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 1°C-Einspar-Rechner (Punkt 7) -->
+          <div class="card saving-calc-card" id="card-savings-calculator">
+            <div class="card-header-row">
+              <div>
+                <h4 class="card-subtitle">🌡️ 1°C-Einspar-Rechner</h4>
+                <p class="card-desc">Faustregel des Umweltbundesamtes: Jedes Grad weniger spart ca. 6% Heizenergie.</p>
+              </div>
+            </div>
+
+            <div class="savings-input-row">
+              <div class="savings-col">
+                <label for="calc-temp-reduction" class="form-label text-xs">Temperatursenkung wählen:</label>
+                <select id="calc-temp-reduction" class="form-select form-input-sm">
+                  <option value="1">1 °C absenken (~6 % Ersparnis)</option>
+                  <option value="2">2 °C absenken (~12 % Ersparnis)</option>
+                  <option value="3">3 °C absenken (~18 % Ersparnis)</option>
+                  <option value="0.5">0,5 °C absenken (~3 % Ersparnis)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="savings-kpi-grid">
+              <div class="savings-kpi-box">
+                <span class="text-xs text-muted">Jahres-Ersparnis (€)</span>
+                <span class="savings-kpi-val text-emerald" id="calc-savings-euro">-- €</span>
+                <span class="text-xs text-muted">Geldbeutel</span>
+              </div>
+              <div class="savings-kpi-box">
+                <span class="text-xs text-muted">Gas-Ersparnis (kWh)</span>
+                <span class="savings-kpi-val text-amber" id="calc-savings-kwh">-- kWh</span>
+                <span class="text-xs text-muted">weniger Gas</span>
+              </div>
+              <div class="savings-kpi-box">
+                <span class="text-xs text-muted">CO₂-Entlastung</span>
+                <span class="savings-kpi-val text-sky" id="calc-savings-co2">-- kg</span>
+                <span class="text-xs text-muted">Klimaschutz</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Methodology explanation -->
+          <div class="card subview-info-card">
+            <div class="subview-info-title">💡 Wie funktioniert diese Prognose?</div>
+            <div class="subview-info-desc" style="line-height: 1.5;">
+              In <strong>30974 Wennigsen (Deister)</strong> fallen ca. 60% des jährlichen Heizbedarfs in den Monaten November bis Februar an, während in den Sommermonaten Juni bis August nur der Warmwasser-Sockel (~1,5% pro Monat) verbraucht wird. Sobald du Ablesungen erfasst, errechnet die App deine individuelle Haushalts-Heizintensität und skaliert die verbleibenden Monate exakt nach dem lokalen Temperaturverlauf.
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW: VERBRAUCHS-HEATMAP (Punkt 24) -->
+        <div id="subview-heatmap" class="stats-subview">
+          <div class="card">
+            <div class="card-header-row">
+              <div>
+                <h3 class="card-subtitle">🔥 Verbrauchs-Heatmap (Jahreskalender)</h3>
+                <p class="card-desc">Farbige Intensitätskarte aller Tage: Grün = sparsam/sommerlich, Orange/Rot = intensives Heizen.</p>
+              </div>
+            </div>
+            <div class="heatmap-legend">
+              <span class="text-xs text-muted">Gering</span>
+              <span class="heatmap-legend-cell lvl-0"></span>
+              <span class="heatmap-legend-cell lvl-1"></span>
+              <span class="heatmap-legend-cell lvl-2"></span>
+              <span class="heatmap-legend-cell lvl-3"></span>
+              <span class="heatmap-legend-cell lvl-4"></span>
+              <span class="text-xs text-muted">Hoch</span>
+            </div>
+            <div class="heatmap-scroll-container">
+              <div class="heatmap-grid" id="heatmap-calendar-grid">
+                <!-- Dynamisch generiert -->
+              </div>
+            </div>
+            <div class="heatmap-selected-info" id="heatmap-selected-info">
+              Tippe auf einen Kalendertag, um die Tageswerte zu sehen.
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW: GEBÄUDE-HEIZKURVE SCATTERPLOT (Punkt 25) -->
+        <div id="subview-curve" class="stats-subview">
+          <div class="card">
+            <div class="card-header-row">
+              <div>
+                <h3 class="card-subtitle">📈 Persönliche Gebäude-Heizkurve</h3>
+                <p class="card-desc">Gasverbrauch (kWh/Tag) in Abhängigkeit von der Wennigsen-Außentemperatur (°C).</p>
+              </div>
+            </div>
+            <div class="chart-container" style="min-height: 280px; position: relative;">
+              <canvas id="curve-scatter-canvas"></canvas>
+            </div>
+            <div class="curve-stats-strip" id="curve-stats-strip">
+              <div><strong>Heizgrenztemperatur:</strong> ca. 15,0 °C</div>
+              <div><strong>Heizlast-Steigung:</strong> ca. 3,5 kWh / K / Tag</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW: REKORDE & MEILENSTEINE (Punkt 26) -->
+        <div id="subview-records" class="stats-subview">
+          <div class="card">
+            <div class="card-header-row">
+              <div>
+                <h3 class="card-subtitle">🏆 Rekorde & Meilensteine</h3>
+                <p class="card-desc">Besondere Auszeichnungen, Spar-Rekorde und Kälteextreme deiner Gastherme.</p>
+              </div>
+            </div>
+            <div class="records-grid" id="records-container">
+              <!-- Dynamisch befüllt -->
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB 4: EINSTELLUNGEN & DESIGN -->
+      <section id="view-settings" class="tab-view">
+        <div class="section-header">
+          <h2 class="section-title">Einstellungen & Design</h2>
+        </div>
+
+        <div class="settings-desktop-grid">
+          <div class="settings-col-left">
+            <!-- DESIGN & THEMES SECTION -->
+            <div class="card settings-section">
+          <h3 class="card-subtitle">🎨 Design & Erscheinungsbild</h3>
+          <p class="card-desc">Wähle zwischen detailliertem Standard-Layout und extrem aufgeräumtem Minimalismus.</p>
+          
+          <!-- Design Style Selector: Standard vs Minimalistisch -->
+          <div class="theme-group">
+            <label class="theme-group-label">Design-Stil & Layout</label>
+            <div class="design-style-toggle" id="design-style-toggle">
+              <button class="design-style-btn active" data-style="standard">
+                <div class="design-style-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                  </svg>
+                </div>
+                <div>
+                  <div class="design-style-title">Standard-Design</div>
+                  <div class="design-style-sub">Vollständiges Layout mit Grafiken, Verläufen & Details</div>
+                </div>
+              </button>
+
+              <button class="design-style-btn" data-style="minimal">
+                <div class="design-style-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                    <line x1="4" y1="18" x2="20" y2="18"></line>
+                  </svg>
+                </div>
+                <div>
+                  <div class="design-style-title">Minimalistisch</div>
+                  <div class="design-style-sub">Fokus auf die wichtigsten Daten & Werte, extrem aufgeräumt</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Base Dark Theme Presets -->
+          <div class="theme-group">
+            <label class="theme-group-label">Hintergrund-Design</label>
+            <div class="theme-presets-grid" id="theme-base-grid">
+              <button class="theme-btn active" data-base-theme="oled-black">
+                <span class="theme-preview bg-oled"></span>
+                <span>OLED Schwarz</span>
+              </button>
+              <button class="theme-btn" data-base-theme="minimal-mono">
+                <span class="theme-preview bg-minimal"></span>
+                <span>Minimal Mono</span>
+              </button>
+              <button class="theme-btn" data-base-theme="midnight-slate">
+                <span class="theme-preview bg-slate"></span>
+                <span>Schiefergrau</span>
+              </button>
+              <button class="theme-btn" data-base-theme="deep-navy">
+                <span class="theme-preview bg-navy"></span>
+                <span>Nachtblau</span>
+              </button>
+              <button class="theme-btn" data-base-theme="forest-dark">
+                <span class="theme-preview bg-forest"></span>
+                <span>Waldgrün</span>
+              </button>
+              <button class="theme-btn" data-base-theme="cyber-dark">
+                <span class="theme-preview bg-cyber"></span>
+                <span>Cyberpunk</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Accent Color Presets -->
+          <div class="theme-group">
+            <label class="theme-group-label">Akzentfarbe</label>
+            <div class="color-swatches-grid" id="color-accent-grid">
+              <button class="color-swatch-btn active" data-accent="flame" title="Flamme (Orange)">
+                <span class="swatch-circle swatch-flame"></span>
+                <span class="swatch-name">Flamme</span>
+              </button>
+              <button class="color-swatch-btn" data-accent="emerald" title="Smaragd (Grün)">
+                <span class="swatch-circle swatch-emerald"></span>
+                <span class="swatch-name">Smaragd</span>
+              </button>
+              <button class="color-swatch-btn" data-accent="sky" title="Ozean (Cyan)">
+                <span class="swatch-circle swatch-sky"></span>
+                <span class="swatch-name">Ozean</span>
+              </button>
+              <button class="color-swatch-btn" data-accent="purple" title="Violett (Lila)">
+                <span class="swatch-circle swatch-purple"></span>
+                <span class="swatch-name">Violett</span>
+              </button>
+              <button class="color-swatch-btn" data-accent="rose" title="Rubin (Rot)">
+                <span class="swatch-circle swatch-rose"></span>
+                <span class="swatch-name">Rubin</span>
+              </button>
+              <button class="color-swatch-btn" data-accent="gold" title="Goldgelb">
+                <span class="swatch-circle swatch-gold"></span>
+                <span class="swatch-name">Gold</span>
+              </button>
+              <button class="color-swatch-btn" data-accent="silver" title="Titan Silber">
+                <span class="swatch-circle swatch-silver"></span>
+                <span class="swatch-name">Titan</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Color Picker -->
+          <div class="custom-color-row">
+            <div class="custom-color-info">
+              <span class="custom-color-title">Individuelle Wunschfarbe</span>
+              <span class="text-xs text-muted" id="custom-color-hex-label">Eigene Farbe frei wählen</span>
+            </div>
+            <div class="custom-color-picker-wrap">
+              <input type="color" id="theme-custom-picker" value="#f59e0b">
+              <button class="btn btn-secondary btn-sm" id="btn-apply-custom-color">Farbe anwenden</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB ORDER / REITER ANORDNEN -->
+        <div class="card settings-section">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-subtitle">📑 Menüleiste & Reiter anordnen</h3>
+              <p class="card-desc">Verschiebe die Reiter mit den Pfeilen nach deinen Wünschen. Der 1. Reiter wird automatisch als Startseite beim Öffnen der App verwendet.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-reset-tab-order" title="Standard-Reihenfolge wiederherstellen">Standard</button>
+          </div>
+          
+          <div class="tab-order-list" id="tab-order-list">
+            <!-- Dynamisch über app.js befüllt -->
+          </div>
+        </div>
+
+          </div>
+
+          <div class="settings-col-right">
+            <!-- Price Management Card -->
+        <div class="card settings-section">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-subtitle">Arbeitspreise (€ / kWh)</h3>
+              <p class="card-desc">Hier verwaltest du deinen Preis pro kWh. Bei Preiserhöhungen legst du einfach einen neuen Preis ab Stichtag an.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-add-price">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Preis hinzufügen
+            </button>
+          </div>
+
+          <!-- Price List Table/Cards -->
+          <div class="price-list" id="price-tiers-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Additional Cost & Installment Settings -->
+        <div class="card settings-section">
+          <h3 class="card-subtitle">Heizkosten-Abschlag & Fixkosten</h3>
+          <p class="card-desc">Für die Nachzahlungsprognose und Jahresendabrechnung.</p>
+          
+          <div class="form-row" style="margin-bottom: 12px;">
+            <label for="setting-monthly-installment" class="form-label">Monatlicher Gas-Abschlag (€)</label>
+            <div class="input-with-addon">
+              <input type="number" id="setting-monthly-installment" class="form-input" step="1" min="0" placeholder="z.B. 120">
+              <span class="input-addon">€ / Monat</span>
+            </div>
+            <div class="input-hint">Der Betrag, den du monatlich an deinen Gasversorger überweist.</div>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 12px;">
+            <label for="setting-base-fee" class="form-label">Grundpreis pro Monat (€)</label>
+            <div class="input-with-addon">
+              <input type="number" id="setting-base-fee" class="form-input" step="0.01" min="0" placeholder="z.B. 10.50">
+              <span class="input-addon">€ / Monat</span>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 12px;">
+            <label for="setting-billing-start" class="form-label">Beginn des Abrechnungsjahres</label>
+            <select id="setting-billing-start" class="form-select">
+              <option value="9">September (Heizbeginn nach Sommer 01.09. - 31.08.)</option>
+              <option value="10">Oktober (Heizperiode 01.10. - 30.09.)</option>
+              <option value="1">Januar (Kalenderjahr 01.01. - 31.12.)</option>
+              <option value="4">April (Frühjahr 01.04. - 31.03.)</option>
+              <option value="7">Juli (Sommer 01.07. - 30.06.)</option>
+            </select>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 12px;">
+            <label for="setting-heating-baseline-select" class="form-label">🔥 Startwert nach dem Sommer (Heizbeginn)</label>
+            <select id="setting-heating-baseline-select" class="form-select">
+              <option value="auto">Automatisch ermitteln (erster Wert nach dem Sommer)</option>
+            </select>
+            <div class="input-hint">Ab diesem Zählerstand startet deine Heizperiode. Die Prognose für Wennigsen und Folgejahre wird auf diesen Startwert kalibriert.</div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Standort für Wetter- & Heizprognose</label>
+            <div class="forecast-location-box">
+              <span class="location-flag">📍</span>
+              <div>
+                <strong>30974 Wennigsen (Deister)</strong>
+                <div class="text-xs text-muted">DWD Referenzstation Hannover-Flughafen & Deister-Klimazone</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PDF & Druckbericht Card -->
+        <div class="card settings-section highlight-card">
+          <div class="flex-row-between">
+            <div>
+              <h3 class="card-subtitle">🖨️ PDF & Druckbericht</h3>
+              <p class="card-desc">Erstelle einen vollständigen Abrechnungsbericht als druckbare PDF für Unterlagen oder Vermieter.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-open-print-report">Bericht drucken</button>
+          </div>
+        </div>
+
+        <!-- iPhone Installation / GitHub Guide Button -->
+        <div class="card settings-section">
+          <div class="flex-row-between">
+            <div>
+              <h3 class="card-subtitle">📱 Auf iPhone 15 Pro Max öffnen</h3>
+              <p class="card-desc">Kurzanleitung zum Hinzufügen auf den Home-Bildschirm als App.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-open-install-guide">Anleitung</button>
+          </div>
+        <!-- Haptik & Barrierefreiheit (Punkt 27) -->
+        <div class="card settings-section">
+          <h3 class="card-subtitle">📳 Haptik & iPhone Feedback</h3>
+          <p class="card-desc">Aktiviere spürbare Vibrationen (Taptic Engine) für Tastenanschläge, Zählerspeicherung und Warnungen.</p>
+          <div class="form-row">
+            <label class="custom-checkbox-container">
+              <input type="checkbox" id="setting-haptic-feedback" checked>
+              <span class="custom-checkbox-checkmark"></span>
+              <span class="custom-checkbox-label">
+                <strong>Haptisches Feedback aktivieren</strong>
+                <small class="text-muted d-block">Sanftes Vibrieren bei Aktionen wie Speichern, Scannen und Tab-Wechsel.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Automatischer Cloud-Sync (Punkt 30) -->
+        <div class="card settings-section">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-subtitle">☁️ Cloud-Sync (GitHub Gist)</h3>
+              <p class="card-desc">Synchronisiere deine Zählerdaten verschlüsselt mit deinem persönlichen GitHub-Account – kein Fremdserver erforderlich.</p>
+            </div>
+            <span class="badge" id="sync-status-badge">Bereit</span>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 10px;">
+            <label for="setting-github-token" class="form-label text-xs">GitHub Personal Access Token (Gist scope)</label>
+            <input type="password" id="setting-github-token" class="form-input form-input-sm" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+            <div class="input-hint">Wird ausschließlich lokal in deinem Browser aufbewahrt.</div>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 12px;">
+            <label for="setting-github-gist-id" class="form-label text-xs">Gist ID (optional, wird sonst automatisch erstellt)</label>
+            <input type="text" id="setting-github-gist-id" class="form-input form-input-sm" placeholder="Automatisch bei erstem Sync">
+          </div>
+
+          <div class="form-row" style="margin-bottom: 12px;">
+            <label class="custom-checkbox-container">
+              <input type="checkbox" id="setting-auto-sync">
+              <span class="custom-checkbox-checkmark"></span>
+              <span class="custom-checkbox-label">
+                <strong>Auto-Sync bei jeder Ablesung</strong>
+                <small class="text-muted d-block">Speichert jeden neuen Zählerstand sofort automatisch in deinem Gist.</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="btn-group-horizontal" style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-sync-upload" style="flex: 1;">
+              ⬆️ In Cloud sichern
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-sync-download" style="flex: 1;">
+              ⬇️ Aus Cloud laden
+            </button>
+          </div>
+          <div class="text-xs text-muted" id="sync-last-time" style="margin-top: 8px; text-align: center;">Noch nicht synchronisiert</div>
+        </div>
+
+        <!-- Data Backup & Reset -->
+        <div class="card settings-section">
+          <h3 class="card-subtitle">Datensicherung, Export & Import</h3>
+          <p class="card-desc">Alle Daten werden lokal in deinem Browser gespeichert. Erstelle regelmäßig ein Backup.</p>
+          
+          <div class="btn-group-vertical">
+            <button class="btn btn-secondary" id="btn-export-csv">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Als CSV exportieren (Excel)
+            </button>
+            <button class="btn btn-secondary" id="btn-export-json">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Backup herunterladen (JSON)
+            </button>
+            <label class="btn btn-secondary file-upload-btn">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Backup wiederherstellen
+              <input type="file" id="input-import-json" accept=".json" style="display: none;">
+            </label>
+            <button class="btn btn-ghost" id="btn-load-sample-data">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Beispieldaten laden
+            </button>
+            <button class="btn btn-danger-ghost" id="btn-reset-all">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Alle Daten zurücksetzen
+            </button>
+          </div>
+        </div>
+
+          </div>
+        </div>
+
+        <div class="footer-note">
+          Heizkosten Tracker • PWA Version 1.1 • Offline-fähig
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (iOS Tab Bar Style) -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="nav-item active" data-view="view-dashboard">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>Übersicht</span>
+      </button>
+
+      <button class="nav-item" data-view="view-history">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"/>
+          <line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <span>Verlauf</span>
+      </button>
+
+      <button class="nav-item" data-view="view-stats">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        <span>Statistik</span>
+      </button>
+
+      <button class="nav-item" data-view="view-settings">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Tarif & Setup</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- MODAL: Zählerstand erfassen / bearbeiten -->
+  <div class="modal-backdrop" id="modal-reading">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-reading-title">Zählerstand erfassen</h3>
+        <button class="btn-close" id="btn-close-reading-modal" aria-label="Schließen">&times;</button>
+      </div>
+      
+      <form id="form-reading" class="modal-form">
+        <input type="hidden" id="reading-id" value="">
+
+        <!-- Zählerstand Input & OCR (Punkt 1 & 3) -->
+        <div class="form-group">
+          <div class="flex-row-between">
+            <label for="reading-kwh" class="form-label font-semibold">
+              Aktueller Zählerstand (kWh)
+            </label>
+            <div class="ocr-btn-wrap">
+              <button type="button" class="btn-ocr-scan" id="btn-trigger-ocr" title="Zählerstand per iPhone-Kamera scannen">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>📷 Scan (OCR)</span>
+              </button>
+              <input type="file" id="input-ocr-camera" accept="image/*" capture="environment" style="display: none;">
+            </div>
+          </div>
+          <div class="input-huge-wrap">
+            <input 
+              type="number" 
+              id="reading-kwh" 
+              class="form-input-huge" 
+              step="any" 
+              inputmode="decimal" 
+              placeholder="0.0" 
+              required
+              autofocus
+            >
+            <span class="huge-unit">kWh</span>
+          </div>
+
+          <!-- OCR Live-Korrektur-Panel mit Ziffern-Buttons (Punkt 1) -->
+          <div class="ocr-correction-panel" id="ocr-correction-panel" style="display: none;">
+            <div class="ocr-correction-header">
+              <span class="ocr-label-tag">📷 Kamera-Erkennung</span>
+              <span class="text-xs text-muted" id="ocr-status-hint">Zahl prüfen & bei Bedarf korrigieren:</span>
+              <button type="button" class="btn-icon-subtle btn-xs" id="btn-close-ocr" title="Schließen">&times;</button>
+            </div>
+            <div class="ocr-digits-editor" id="ocr-digits-editor">
+              <!-- Dynamisch befüllt -->
+            </div>
+            <div class="ocr-tip-text">Tippe auf eine Ziffer zur schnellen Korrektur oder passe den Wert direkt oben an.</div>
+          </div>
+
+          <!-- Plausibilitäts- & Vertipper-Warnung (Punkt 3) -->
+          <div class="plausibility-box" id="reading-plausibility-box" style="display: none;">
+            <div class="plausibility-icon">⚠️</div>
+            <div class="plausibility-body">
+              <div class="plausibility-title" id="plausibility-title">Auffälliger Zählerstand!</div>
+              <div class="plausibility-desc" id="plausibility-desc">Der errechnete Verbrauch weicht stark vom bisherigen Schnitt ab.</div>
+            </div>
+          </div>
+
+          <div class="input-hint" id="reading-prev-hint">
+            Vorheriger Zählerstand: <span id="reading-prev-val">--</span> kWh
+          </div>
+        </div>
+
+        <!-- Datum & Uhrzeit -->
+        <div class="form-group">
+          <div class="flex-row-between">
+            <label for="reading-datetime" class="form-label">Datum & Uhrzeit</label>
+            <button type="button" class="btn-link text-xs" id="btn-set-reading-now">Jetzt einsetzen</button>
+          </div>
+          <input 
+            type="datetime-local" 
+            id="reading-datetime" 
+            class="form-input" 
+            required
+          >
+          <div class="text-xs text-muted" style="margin-top: 4px;">Wird beim Öffnen automatisch auf die aktuelle Zeit gesetzt.</div>
+        </div>
+
+        <!-- Live Preview Calculation Box -->
+        <div class="preview-box" id="reading-preview-box">
+          <div class="preview-header">
+            <span>Berechnete Werte für diesen Eintrag</span>
+            <span id="preview-status-badge" class="badge badge-success">OK</span>
+          </div>
+          <div class="preview-grid">
+            <div class="preview-item">
+              <span class="preview-label">Verbrauch:</span>
+              <span class="preview-val" id="preview-delta">-- kWh</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">Zeitraum:</span>
+              <span class="preview-val" id="preview-duration">-- Tage</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">Kosten:</span>
+              <span class="preview-val text-emerald" id="preview-cost">-- €</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">Ø pro Tag:</span>
+              <span class="preview-val" id="preview-daily">-- kWh/d</span>
+            </div>
+          </div>
+          <div class="preview-price-info" id="preview-price-info">
+            Basis: -- ct/kWh
+          </div>
+        </div>
+
+        <!-- Startwert nach Sommer Checkbox -->
+        <div class="form-group">
+          <label class="custom-checkbox-container" id="reading-heating-start-container">
+            <input type="checkbox" id="reading-is-heating-start">
+            <span class="custom-checkbox-checkmark"></span>
+            <span class="custom-checkbox-label">
+              <span class="d-flex align-center gap-1 font-semibold text-warning">
+                🔥 Startwert nach dem Sommer (Heizbeginn)
+              </span>
+              <small class="text-muted d-block" style="margin-top: 2px;">Markiert diesen Zählerstand als Nullpunkt für die Heizperiode nach dem Sommer. Ab hier wird das Heizen berechnet.</small>
+            </span>
+          </label>
+        </div>
+
+        <!-- Zähler-Foto Archiv (Punkt 4) -->
+        <div class="form-group">
+          <div class="flex-row-between">
+            <label class="form-label font-semibold">📸 Zähler-Foto (Beweis für Abrechnung)</label>
+            <button type="button" class="btn-link text-xs" id="btn-trigger-photo">+ Foto hinzufügen</button>
+          </div>
+          <input type="file" id="input-reading-photo" accept="image/*" capture="environment" style="display: none;">
+          <div class="reading-photo-preview-wrap" id="reading-photo-preview-wrap" style="display: none;">
+            <img id="reading-photo-preview-img" src="" alt="Zählerstand Foto">
+            <div class="photo-preview-info">
+              <span class="text-xs" id="photo-preview-name">Foto angehängt</span>
+              <button type="button" class="btn-remove-photo" id="btn-remove-photo" title="Foto löschen">&times;</button>
+            </div>
+          </div>
+          <input type="hidden" id="reading-photo-data" value="">
+        </div>
+
+        <!-- Schnell-Tags (Punkt 5) -->
+        <div class="form-group">
+          <label class="form-label">Eintrags-Tags (optional)</label>
+          <div class="tag-chips-wrap" id="modal-tag-chips">
+            <button type="button" class="tag-chip" data-tag="Heizbeginn">🔥 Heizbeginn</button>
+            <button type="button" class="tag-chip" data-tag="Kamin">🪵 Kamin</button>
+            <button type="button" class="tag-chip" data-tag="Urlaub">✈️ Urlaub</button>
+            <button type="button" class="tag-chip" data-tag="Gäste">👥 Gäste</button>
+            <button type="button" class="tag-chip" data-tag="Frost">❄️ Frost</button>
+            <button type="button" class="tag-chip" data-tag="Sparmodus">🌱 Sparmodus</button>
+          </div>
+          <input type="hidden" id="reading-tags-input" value="">
+        </div>
+
+        <!-- Optional Notiz -->
+        <div class="form-group">
+          <label for="reading-note" class="form-label">Notiz (optional)</label>
+          <input 
+            type="text" 
+            id="reading-note" 
+            class="form-input" 
+            placeholder="z.B. Heizung eingeschaltet, Urlaub etc."
+          >
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-reading">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-reading">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Post-Submission Auswertungs-Zusammenfassung -->
+  <div class="modal-backdrop" id="modal-entry-summary">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="modal-header">
+        <h3 class="modal-title" id="summary-modal-title">🎉 Ablesung erfasst!</h3>
+        <button class="btn-close" id="btn-close-entry-summary" aria-label="Schließen">&times;</button>
+      </div>
+
+      <div class="summary-modal-content">
+        <!-- Prominent Interval Box -->
+        <div class="card summary-highlight-card">
+          <div class="summary-highlight-title" id="summary-interval-header">Seit letzter Ablesung</div>
+          
+          <div class="summary-hero-row">
+            <div>
+              <div class="summary-hero-sub">Kosten Zeitraum</div>
+              <div class="summary-hero-value text-emerald" id="summary-period-cost">0,00 €</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="summary-hero-sub">Ø Kosten / Tag</div>
+              <div class="summary-hero-value text-amber" id="summary-daily-cost">0,00 €/Tag</div>
+            </div>
+          </div>
+
+          <div class="summary-stats-subgrid">
+            <div class="summary-subcell">
+              <span class="subcell-label">Verbrauch:</span>
+              <span class="subcell-val" id="summary-period-kwh">+ 0,0 kWh</span>
+            </div>
+            <div class="summary-subcell">
+              <span class="subcell-label">Ø Verbrauch / Tag:</span>
+              <span class="subcell-val" id="summary-daily-kwh">0,0 kWh/d</span>
+            </div>
+            <div class="summary-subcell">
+              <span class="subcell-label">Tage:</span>
+              <span class="subcell-val" id="summary-period-days">0 Tage</span>
+            </div>
+            <div class="summary-subcell">
+              <span class="subcell-label">Angewandter Tarif:</span>
+              <span class="subcell-val" id="summary-period-price">-- ct/kWh</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cumulative Status up to this Reading -->
+        <div class="card summary-secondary-card">
+          <div class="summary-secondary-title">📊 Gesamtstand bis zu dieser Ablesung</div>
+          <div class="summary-two-col">
+            <div>
+              <span class="text-xs text-muted">Gesamtkosten bis dahin</span>
+              <div class="text-lg font-bold text-emerald" id="summary-total-cost-todate">0,00 €</div>
+              <div class="text-xs text-secondary" id="summary-alltime-daily-cost">Ø 0,00 € / Tag</div>
+            </div>
+            <div style="text-align: right;">
+              <span class="text-xs text-muted">Zählerstand</span>
+              <div class="text-lg font-bold" id="summary-meter-todate">0,0 kWh</div>
+              <div class="text-xs text-secondary" id="summary-total-kwh-todate">Gesamt: 0 kWh</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Month & Year Context -->
+        <div class="summary-context-row">
+          <div class="context-pill">
+            <span class="text-xs text-muted" id="summary-month-name">Diesen Monat</span>
+            <strong id="summary-month-vals">0 kWh • 0,00 €</strong>
+          </div>
+          <div class="context-pill">
+            <span class="text-xs text-muted" id="summary-year-name">Dieses Jahr</span>
+            <strong id="summary-year-vals">0 kWh • 0,00 €</strong>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" id="btn-summary-to-history">Im Verlauf ansehen</button>
+          <button type="button" class="btn btn-primary" id="btn-summary-done">Fertig</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Preis hinzufügen / bearbeiten -->
+  <div class="modal-backdrop" id="modal-price">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-price-title">Neuen Preis anlegen</h3>
+        <button class="btn-close" id="btn-close-price-modal" aria-label="Schließen">&times;</button>
+      </div>
+
+      <form id="form-price" class="modal-form">
+        <input type="hidden" id="price-id" value="">
+
+        <!-- Arbeitspreis -->
+        <div class="form-group">
+          <label for="price-cents" class="form-label font-semibold">
+            Arbeitspreis (Cent pro kWh)
+          </label>
+          <div class="input-with-addon">
+            <input 
+              type="number" 
+              id="price-cents" 
+              class="form-input" 
+              step="0.01" 
+              min="0" 
+              placeholder="z.B. 12.50" 
+              required
+            >
+            <span class="input-addon">ct / kWh</span>
+          </div>
+          <div class="input-hint" id="price-euro-preview">
+            Entspricht: <strong>0,0000 € / kWh</strong>
+          </div>
+        </div>
+
+        <!-- Gültig ab Datum -->
+        <div class="form-group">
+          <label for="price-valid-from" class="form-label font-semibold">
+            Gültig ab Datum
+          </label>
+          <input 
+            type="date" 
+            id="price-valid-from" 
+            class="form-input" 
+            required
+          >
+          <div class="input-hint">
+            Ab diesem Datum gilt dieser Preis für alle späteren Verbrauchsintervalle.
+          </div>
+        </div>
+
+        <!-- Bezeichnung / Notiz -->
+        <div class="form-group">
+          <label for="price-note" class="form-label">Bezeichnung / Grund</label>
+          <input 
+            type="text" 
+            id="price-note" 
+            class="form-input" 
+            placeholder="z.B. Preiserhöhung Stadtwerke, Neuer Vertrag"
+          >
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-price">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-price">Preis speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: iPhone & GitHub Anleitung -->
+  <div class="modal-backdrop" id="modal-install-guide">
+    <div class="modal-sheet modal-sheet-tall">
+      <div class="sheet-handle"></div>
+      <div class="modal-header">
+        <h3 class="modal-title">iPhone 15 Pro Max & GitHub</h3>
+        <button class="btn-close" id="btn-close-guide" aria-label="Schließen">&times;</button>
+      </div>
+      <div class="guide-content">
+        <div class="guide-step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Auf GitHub hochladen:</strong>
+            <p>Erstelle ein neues Repository auf GitHub (z.B. <code>gas-tracker</code>) und lade diese Dateien hoch.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>GitHub Pages aktivieren:</strong>
+            <p>Gehe im Repository auf <em>Settings &rarr; Pages</em>. Wähle bei Source <em>Deploy from a branch</em>, Branch <em>main</em> und Ordner <em>/ (root)</em>, dann klicke auf <strong>Save</strong>.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Auf dem iPhone öffnen:</strong>
+            <p>Öffne die GitHub Pages URL in <strong>Safari</strong> auf deinem iPhone 15 Pro Max: <br><code>https://&lt;dein-benutzername&gt;.github.io/gas-tracker/</code></p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Als App installieren:</strong>
+            <p>Tippe in Safari unten auf das <strong>Teilen-Symbol</strong> (Quadrat mit Pfeil nach oben) &rarr; scrolle nach unten und wähle <strong>"Zum Home-Bildschirm"</strong>.</p>
+          </div>
+        </div>
+        <div class="guide-alert">
+          💡 Die App funktioniert danach komplett wie eine native iPhone-App im Vollbildmodus und läuft dank Service Worker auch ohne Internetverbindung im Heizungskeller!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Zähler-Foto Fullscreen Lightbox (Punkt 4) -->
+  <div class="modal-backdrop modal-backdrop-lightbox" id="modal-photo-viewer" style="display: none;">
+    <div class="lightbox-container">
+      <div class="lightbox-header">
+        <div class="lightbox-meta">
+          <div class="lightbox-title" id="lightbox-reading-date">Zählerfoto</div>
+          <div class="lightbox-subtitle" id="lightbox-reading-value">0 kWh</div>
+        </div>
+        <button class="btn-close lightbox-close-btn" id="btn-close-lightbox" aria-label="Schließen">&times;</button>
+      </div>
+      <div class="lightbox-image-wrap">
+        <img id="lightbox-image" src="" alt="Zählerstand Foto">
+        <div class="lightbox-watermark" id="lightbox-watermark">30974 Wennigsen</div>
+      </div>
+      <div class="lightbox-footer">
+        <div class="lightbox-tags" id="lightbox-tags"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- DEDICATED PRINTABLE REPORT CONTAINER (Drucklayout & PDF) -->
+  <div id="printable-report" class="printable-report">
+    <!-- Dynamically populated prior to window.print() -->
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
